@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/beto20/gofluence/model"
+	"github.com/beto20/gofluence/tmpl"
 )
 
 const (
@@ -24,7 +25,7 @@ type confluenceDto struct {
 	version     int64
 	spaceKey    string
 	bitbucket   model.Bitbucket
-	projectData model.Document
+	projectData []model.Document
 }
 
 func toConfluenceDto(b model.Bitbucket, documents []model.Document) confluenceDto {
@@ -33,8 +34,25 @@ func toConfluenceDto(b model.Bitbucket, documents []model.Document) confluenceDt
 		version:     DEFAULT_INT,
 		spaceKey:    DEFAULT_EMPTY,
 		bitbucket:   b,
-		projectData: documents[0],
+		projectData: documents,
 	}
+}
+
+func toTable(cdto confluenceDto) []tmpl.Table {
+	var tables []tmpl.Table
+
+	for _, pd := range cdto.projectData {
+		t := tmpl.Table{
+			Module:      pd.Name,
+			Version:     pd.Version,
+			Environment: cdto.bitbucket.DeploymentEnvironment,
+			Branch:      cdto.bitbucket.Branch,
+			Commits:     cdto.bitbucket.Commit,
+		}
+		tables = append(tables, t)
+	}
+
+	return tables
 }
 
 func Execute(b model.Bitbucket, documents []model.Document) {
@@ -54,7 +72,7 @@ func Execute(b model.Bitbucket, documents []model.Document) {
 }
 
 func updatePage(cdto confluenceDto) {
-	// content := fmt.Sprintf("<h1>%s</h1><p>This is a sample page content. branch: %s, build: %s, env: %s </p>", b.RepoFullName, b.Branch, b.BuildNumber, b.DeploymentEnvironment)
+	content := tmpl.BuildPage(cdto.bitbucket.RepoFullName, "", toTable(cdto))
 
 	request := UpdatePageRequest{
 		Id:       cdto.id,
@@ -75,7 +93,7 @@ func updatePage(cdto confluenceDto) {
 				Value          string `json:"value"`
 				Representation string `json:"representation"`
 			}{
-				Value:          table_content,
+				Value:          content,
 				Representation: BODY_STORAGE,
 			},
 		},
@@ -210,4 +228,37 @@ func findByTitle(cdto *confluenceDto) {
 	cdto.spaceKey = response.Results[0].Space.Key
 }
 
-const table_content = ``
+// const table_content = `
+// 	<table>
+// 		<tbody>
+// 			<tr>
+// 				<th>modulo</th>
+// 				<th>version</th>
+// 				<th>artifactory</th>
+// 				<th>estado</th>
+// 				<th>rama</th>
+// 			</tr>
+// 			<tr>
+// 				<td>assi-ifx-associated-services</td>
+// 				<td>0.0.1-6</td>
+// 				<td>SNAPSHOT - RELEASE</td>
+// 				<td>ESTABLE</td>
+// 				<td>develop - master</td>
+// 			</tr>
+// 			<tr>
+// 				<td>assi-ifx-customer</td>
+// 				<td>0.0.1-7</td>
+// 				<td>SNAPSHOT - RELEASE</td>
+// 				<td>ESTABLE</td>
+// 				<td>develop - master</td>
+// 			</tr>
+// 			<tr>
+// 				<td>assi-ifx-savings-account</td>
+// 				<td>0.0.1-6</td>
+// 				<td>SNAPSHOT - RELEASE</td>
+// 				<td>OBSOLETO</td>
+// 				<td>develop - master</td>
+// 			</tr>
+// 		</tbody>
+// 	</table>
+// `
