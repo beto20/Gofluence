@@ -1,0 +1,44 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of Go coverage tool
+*.out
+
+# Compiled Go files
+*.a
+*.o
+
+# Debugging files
+*.pdb
+*.dSYM
+
+# IDE-specific files
+*.iml
+*.ipr
+
+# System-generated files
+._*
+*.swp
+core
+
+# Cgo-generated files
+*.cgo*.go
+*.cgo*.c
+_cgo_*
+_obj_*
+
+# Vendor directory
+vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Environment file
+env
