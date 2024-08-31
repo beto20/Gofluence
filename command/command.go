@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/beto20/gofluence/confluence"
+	"github.com/beto20/gofluence/java"
 	"github.com/beto20/gofluence/model"
 )
 
@@ -77,8 +78,8 @@ func (b *Command) Run(sc string) error {
 		Url:                   b.url,
 	}
 
-	// java.ReadJavaProject(bb.Prefix)
-	confluence.Execute(bb)
+	data := java.ReadJavaProject(bb.Prefix)
+	confluence.Execute(bb, data)
 	return nil
 }
 

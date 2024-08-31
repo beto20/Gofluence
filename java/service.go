@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/beto20/gofluence/model"
 )
 
 const (
@@ -14,14 +16,9 @@ const (
 	ROOT_DIR = "."
 )
 
-type Document struct {
-	Name    string
-	Version string
-}
-
-func ReadJavaProject(prefix string) {
+func ReadJavaProject(prefix string) []model.Document {
 	currentDir, _ := os.Getwd()
-	var documents []Document
+	var documents []model.Document
 
 	directories := getDirectoriesByPrefix(ROOT_DIR, prefix)
 
@@ -31,13 +28,10 @@ func ReadJavaProject(prefix string) {
 		documents = append(documents, doc)
 	}
 
-	for _, ds := range documents {
-		fmt.Println("Name: %s", ds.Name)
-		fmt.Println("Version: %s", ds.Version)
-	}
+	return documents
 }
 
-func getXmlData(dirname string) Document {
+func getXmlData(dirname string) model.Document {
 	changeDirectory(dirname)
 	return getXmlMetadata()
 }
@@ -66,7 +60,7 @@ func getDirectoriesByPrefix(dir string, prefix string) []string {
 	return filtered
 }
 
-func getXmlMetadata() Document {
+func getXmlMetadata() model.Document {
 	xmlFile, err := os.Open(POM_XML)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -81,8 +75,10 @@ func getXmlMetadata() Document {
 		fmt.Println("Error parsing XML:", err)
 	}
 
-	return Document{
+	return model.Document{
 		Name:    project.ArtifactId,
 		Version: project.Version,
 	}
 }
+
+

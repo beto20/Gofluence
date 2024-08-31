@@ -10,24 +10,118 @@ import (
 	"github.com/beto20/gofluence/model"
 )
 
-func Execute(b model.Bitbucket) {
+const (
+	BODY_PAGE         = "page"
+	BODY_STORAGE      = "storage"
+	REQ_PARAM_VERSION = "version"
+	REQ_PARAM_SPACE   = "space"
+	DEFAULT_EMPTY     = " "
+	DEFAULT_INT       = 0
+)
 
-	// fmt.Println("request:", string(jsonData))
-
-	// Post(jsonData)
-
-	page := findByTitle("", "", b)
-
-	updatePage(b, page.Results[0].Id, page.Results[0].Version.Number)
+type confluenceDto struct {
+	id          string
+	version     int64
+	spaceKey    string
+	bitbucket   model.Bitbucket
+	projectData model.Document
 }
 
-func updatePage(b model.Bitbucket, id string, version int64) {
+func toConfluenceDto(b model.Bitbucket, documents []model.Document) confluenceDto {
+	return confluenceDto{
+		id:          DEFAULT_EMPTY,
+		version:     DEFAULT_INT,
+		spaceKey:    DEFAULT_EMPTY,
+		bitbucket:   b,
+		projectData: documents[0],
+	}
+}
+
+func Execute(b model.Bitbucket, documents []model.Document) {
+	fmt.Println("Start Confluence Processing")
+	cdto := toConfluenceDto(b, documents)
+	findByTitle(&cdto)
+
+	if cdto.id == "" || cdto.version == 0 {
+		fmt.Println("Create New Page")
+		// createPage(cdto)
+	}
+
+	fmt.Println("Update Existing Page")
+	updatePage(cdto)
+
+	fmt.Println("End Confluence Processing")
+}
+
+func updatePage(cdto confluenceDto) {
 	// content := fmt.Sprintf("<h1>%s</h1><p>This is a sample page content. branch: %s, build: %s, env: %s </p>", b.RepoFullName, b.Branch, b.BuildNumber, b.DeploymentEnvironment)
 
 	request := UpdatePageRequest{
-		Id:       id,
-		PageType: "page",
-		Title:    b.RepoFullName,
+		Id:       cdto.id,
+		PageType: BODY_PAGE,
+		Title:    cdto.bitbucket.RepoFullName,
+		Space: struct {
+			Key string `json:"key"`
+		}{
+			Key: cdto.spaceKey,
+		},
+		Body: struct {
+			Storage struct {
+				Value          string `json:"value"`
+				Representation string `json:"representation"`
+			} `json:"storage"`
+		}{
+			Storage: struct {
+				Value          string `json:"value"`
+				Representation string `json:"representation"`
+			}{
+				Value:          table_content,
+				Representation: BODY_STORAGE,
+			},
+		},
+		Version: struct {
+			Number int64 `json:"number"`
+		}{
+			Number: cdto.version + 1,
+		},
+	}
+
+	jsonData, err := json.Marshal(request)
+	if err != nil {
+		fmt.Print("error marshalling request")
+	}
+
+	url := cdto.bitbucket.Url + "/content/" + cdto.id
+	req, _ := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
+	req.Header.Add("Authorization", "Basic "+cdto.bitbucket.Token)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		fmt.Println("ERROR: ", res.Status)
+	}
+
+	_, err = io.ReadAll(res.Body)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func createPage(cdto confluenceDto) {
+	request := CreatePageRequest{
+		PageType: BODY_PAGE,
+		Title:    cdto.bitbucket.RepoFullName,
+		Ancestors: []struct {
+			Id string `json:"id"`
+		}{
+			{Id: "id"},
+		},
 		Space: struct {
 			Key string `json:"key"`
 		}{
@@ -43,14 +137,9 @@ func updatePage(b model.Bitbucket, id string, version int64) {
 				Value          string `json:"value"`
 				Representation string `json:"representation"`
 			}{
-				Value:          "<p>MOCK123</p>",
-				Representation: "storage",
+				Value:          "<h1>PRUEBA</h1><ac:structured-macro ac:name=\"table\"><ac:rich-text-body><table><tbody><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table></ac:rich-text-body></ac:structured-macro>",
+				Representation: BODY_STORAGE,
 			},
-		},
-		Version: struct {
-			Number int64 `json:"number"`
-		}{
-			Number: version + 1,
 		},
 	}
 
@@ -60,68 +149,34 @@ func updatePage(b model.Bitbucket, id string, version int64) {
 	}
 
 	fmt.Println("jsondata: ", request)
-	url := b.Url + "/content/" + id
-	fmt.Println("url: ", url)
-	req, _ := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
-	req.Header.Add("Authorization", "Basic "+b.Token)
+	url := cdto.bitbucket.Url + "/content/" + cdto.id
+
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	req.Header.Add("Authorization", "Basic "+cdto.bitbucket.Token)
 	req.Header.Set("Content-Type", "application/json")
 
-	res, err := http.DefaultClient.Do(req)
+	// res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
 		panic(err)
 	}
 
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Println("ERROR: ", res.Status)
-		fmt.Println("ERROR: ", err)
-	}
-
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(string(body))
-}
-
-func createPage() {
-	// request := CreatePageRequest{
-	// 	PageType: "page",
-	// 	Title:    b.RepoFullName,
-	// 	Ancestors: []struct {
-	// 		Id string `json:"id"`
-	// 	}{
-	// 		{Id: id},
-	// 	},
-	// 	Space: struct {
-	// 		Key string `json:"key"`
-	// 	}{
-	// 		Key: "TC",
-	// 	},
-	// 	Body: struct {
-	// 		Storage struct {
-	// 			Value          string `json:"value"`
-	// 			Representation string `json:"representation"`
-	// 		} `json:"storage"`
-	// 	}{
-	// 		Storage: struct {
-	// 			Value          string `json:"value"`
-	// 			Representation string `json:"representation"`
-	// 		}{
-	// 			Value:          "<h1>PRUEBA</h1><ac:structured-macro ac:name=\"table\"><ac:rich-text-body><table><tbody><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table></ac:rich-text-body></ac:structured-macro>",
-	// 			Representation: "storage",
-	// 		},
-	// 	},
+	// defer res.Body.Close()
+	// if res.StatusCode != 200 {
+	// 	fmt.Println("ERROR: ", res.Status)
 	// }
+
+	_, err = io.ReadAll(req.Body)
+	if err != nil {
+		panic(err)
+	}
+
 }
 
-func findByTitle(spaceKey string, title string, b model.Bitbucket) Response {
-	fmt.Println("TEST: ", b.Url)
-	url := b.Url + "/content?spaceKey=TC&title=prueba-1&expand=version"
+func findByTitle(cdto *confluenceDto) {
+	url := cdto.bitbucket.Url + "/content?title=" + cdto.bitbucket.RepoFullName + "&expand=" + REQ_PARAM_VERSION + "," + REQ_PARAM_SPACE
 	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Authorization", "Basic "+b.Token)
+	req.Header.Add("Authorization", "Basic "+cdto.bitbucket.Token)
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := http.DefaultClient.Do(req)
@@ -140,7 +195,7 @@ func findByTitle(spaceKey string, title string, b model.Bitbucket) Response {
 		panic(err)
 	}
 
-	var response Response
+	var response FindByTitleResponse
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		fmt.Print("error marshalling request")
@@ -150,19 +205,9 @@ func findByTitle(spaceKey string, title string, b model.Bitbucket) Response {
 		fmt.Println("No content found")
 	}
 
-	fmt.Println("res:", response)
-
-	return response
+	cdto.id = response.Results[0].Id
+	cdto.version = response.Results[0].Version.Number
+	cdto.spaceKey = response.Results[0].Space.Key
 }
 
-type Response struct {
-	Results []struct {
-		Id       string `json:"id"`
-		PageType string `json:"type"`
-		Status   string `json:"status"`
-		Title    string `json:"title"`
-		Version  struct {
-			Number int64 `json:"number"`
-		} `json:"version"`
-	} `json:"results"`
-}
+const table_content = ``
