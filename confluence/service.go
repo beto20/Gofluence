@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/beto20/gofluence/model"
 	"github.com/beto20/gofluence/tmpl"
@@ -58,6 +59,8 @@ func toTable(cdto confluenceDto) []tmpl.Table {
 func Execute(b model.Bitbucket, documents []model.Document) {
 	fmt.Println("Start Confluence Processing")
 	cdto := toConfluenceDto(b, documents)
+	getRepositoryName(&cdto)
+	getEnvorinment(&cdto)
 	findByTitle(&cdto)
 
 	if cdto.id == "" || cdto.version == 0 {
@@ -67,8 +70,21 @@ func Execute(b model.Bitbucket, documents []model.Document) {
 
 	fmt.Println("Update Existing Page")
 	updatePage(cdto)
-
 	fmt.Println("End Confluence Processing")
+}
+
+func getRepositoryName(cdto *confluenceDto) {
+	if strings.Contains(cdto.bitbucket.RepoFullName, "/") {
+		cdto.bitbucket.RepoFullName = strings.Split(cdto.bitbucket.RepoFullName, "/")[1]
+	}
+}
+
+func getEnvorinment(cdto *confluenceDto) {
+	if strings.Contains(cdto.bitbucket.Branch, "master") {
+		cdto.bitbucket.DeploymentEnvironment = "Release"
+	} else {
+		cdto.bitbucket.DeploymentEnvironment = "Development - Snapshot"
+	}
 }
 
 func updatePage(cdto confluenceDto) {
@@ -131,6 +147,7 @@ func updatePage(cdto confluenceDto) {
 	}
 }
 
+// TODO: implement
 func createPage(cdto confluenceDto) {
 	request := CreatePageRequest{
 		PageType: BODY_PAGE,
@@ -227,38 +244,3 @@ func findByTitle(cdto *confluenceDto) {
 	cdto.version = response.Results[0].Version.Number
 	cdto.spaceKey = response.Results[0].Space.Key
 }
-
-// const table_content = `
-// 	<table>
-// 		<tbody>
-// 			<tr>
-// 				<th>modulo</th>
-// 				<th>version</th>
-// 				<th>artifactory</th>
-// 				<th>estado</th>
-// 				<th>rama</th>
-// 			</tr>
-// 			<tr>
-// 				<td>assi-ifx-associated-services</td>
-// 				<td>0.0.1-6</td>
-// 				<td>SNAPSHOT - RELEASE</td>
-// 				<td>ESTABLE</td>
-// 				<td>develop - master</td>
-// 			</tr>
-// 			<tr>
-// 				<td>assi-ifx-customer</td>
-// 				<td>0.0.1-7</td>
-// 				<td>SNAPSHOT - RELEASE</td>
-// 				<td>ESTABLE</td>
-// 				<td>develop - master</td>
-// 			</tr>
-// 			<tr>
-// 				<td>assi-ifx-savings-account</td>
-// 				<td>0.0.1-6</td>
-// 				<td>SNAPSHOT - RELEASE</td>
-// 				<td>OBSOLETO</td>
-// 				<td>develop - master</td>
-// 			</tr>
-// 		</tbody>
-// 	</table>
-// `

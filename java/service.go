@@ -80,5 +80,3 @@ func getXmlMetadata() model.Document {
 		Version: project.Version,
 	}
 }
-
-
