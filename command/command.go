@@ -38,10 +38,10 @@ func BuildCommand(cm string) *Command {
 func genericFlags(c *Command) *Command {
 	c.fs.StringVar(&c.branch, "b", "branch", "master")
 	c.fs.StringVar(&c.commit, "c", "commit", "bf372e2")
-	c.fs.StringVar(&c.connectionString, "cs", "connection string", "https://connection.storage.example/")
+	c.fs.StringVar(&c.connectionString, "cs", "connection string", "server:xxxxx")
 	c.fs.StringVar(&c.repoFullName, "rn", "repository name", "example-confluence-repo")
 	c.fs.StringVar(&c.prefix, "p", "prefix", "exmp")
-	c.fs.StringVar(&c.token, "t", "token", "9ycC5jb20ucGU6QVR")
+	c.fs.StringVar(&c.token, "t", "token", "xxxxx")
 	c.fs.StringVar(&c.url, "u", "url", "https://localhost:8080/")
 
 	return c
