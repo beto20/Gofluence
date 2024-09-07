@@ -1,6 +1,7 @@
 package java
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -20,13 +21,16 @@ func ReadJavaProject(prefix string) []model.Document {
 	currentDir, _ := os.Getwd()
 	var documents []model.Document
 
-	directories := getDirectoriesByPrefix(ROOT_DIR, prefix)
+	subDirectories := getSubDirectoriesByPrefix(ROOT_DIR, prefix)
 
-	for _, d := range directories {
-		doc := getXmlData(d)
+	for _, sd := range subDirectories {
+		doc := getXmlData(sd)
 		changeDirectory(currentDir)
 		documents = append(documents, doc)
 	}
+
+	parentPom := getXmlData(currentDir)
+	documents = append(documents, parentPom)
 
 	return documents
 }
@@ -43,7 +47,7 @@ func changeDirectory(dirname string) {
 	}
 }
 
-func getDirectoriesByPrefix(dir string, prefix string) []string {
+func getSubDirectoriesByPrefix(dir string, prefix string) []string {
 	var filtered []string
 	files, err := os.ReadDir(dir)
 
@@ -75,8 +79,30 @@ func getXmlMetadata() model.Document {
 		fmt.Println("Error parsing XML:", err)
 	}
 
+	x, _ := json.Marshal(project)
+	fmt.Print(string(x))
+
+	var dependencies []model.Dependency
+
+	for _, dep := range project.Dependencies.Dependency {
+		d := model.Dependency{
+			GroupId:    dep.GroupId,
+			ArtifactId: dep.ArtifactId,
+			Version:    dep.Version,
+			Scope:      dep.Scope,
+		}
+		dependencies = append(dependencies, d)
+	}
+
 	return model.Document{
 		Name:    project.ArtifactId,
 		Version: project.Version,
+		Parent: model.Parent{
+			Name:    project.Parent.ArtifactId,
+			Version: project.Parent.Version,
+		},
+		Dependencies: model.Dependencies{
+			Dependency: dependencies,
+		},
 	}
 }
