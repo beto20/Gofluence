@@ -15,7 +15,15 @@ type Project struct {
 		ArtifactId string `xml:"artifactId"`
 		Version    string `xml:"version"`
 	} `xml:"parent"`
-	GroupId    string `xml:"groupId"`
-	ArtifactId string `xml:"artifactId"`
-	Version    string `xml:"version"`
+	GroupId      string `xml:"groupId"`
+	ArtifactId   string `xml:"artifactId"`
+	Version      string `xml:"version"`
+	Dependencies struct {
+		Dependency []struct {
+			GroupId    string `xml:"groupId"`
+			ArtifactId string `xml:"artifactId"`
+			Version    string `xml:"version"`
+			Scope      string `xml:"scope"`
+		} `xml:"dependency"`
+	} `xml:"dependencies"`
 }

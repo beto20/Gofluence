@@ -13,12 +13,15 @@ import (
 )
 
 const (
-	BODY_PAGE         = "page"
-	BODY_STORAGE      = "storage"
-	REQ_PARAM_VERSION = "version"
-	REQ_PARAM_SPACE   = "space"
-	DEFAULT_EMPTY     = " "
-	DEFAULT_INT       = 0
+	BODY_PAGE              = "page"
+	BODY_STORAGE           = "storage"
+	REQ_PARAM_VERSION      = "version"
+	REQ_PARAM_SPACE        = "space"
+	DEFAULT_EMPTY          = " "
+	DEFAULT_INT            = 0
+	BRANCH                 = "master"
+	DEPLOYMENT_RELEASE     = "Release"
+	DEPLOYMENT_DEVELOPMENT = "Development - Snapshot"
 )
 
 type confluenceDto struct {
@@ -39,7 +42,7 @@ func toConfluenceDto(b model.Bitbucket, documents []model.Document) confluenceDt
 	}
 }
 
-func toTable(cdto confluenceDto) []tmpl.Table {
+func toTableProject(cdto confluenceDto) []tmpl.Table {
 	var tables []tmpl.Table
 
 	for _, pd := range cdto.projectData {
@@ -56,6 +59,30 @@ func toTable(cdto confluenceDto) []tmpl.Table {
 	return tables
 }
 
+func toTableDependency(documents []model.Document) []tmpl.TableDependency {
+	var tableDep []tmpl.TableDependency
+
+	for _, doc := range documents {
+		for _, dep := range doc.Dependencies.Dependency {
+			t := tmpl.TableDependency{
+				GroupId:    dep.GroupId,
+				ArtifactId: dep.ArtifactId,
+				Version:    dep.Version,
+				Scope:      dep.Scope,
+			}
+			tableDep = append(tableDep, t)
+		}
+	}
+
+	return tableDep
+}
+
+func buildConfluencePage(cdto confluenceDto, documents []model.Document) string {
+	deps := toTableDependency(documents)
+	logs := toTableProject(cdto)
+	return tmpl.BuildPage(cdto.bitbucket.RepoFullName, "", logs, deps)
+}
+
 func Execute(b model.Bitbucket, documents []model.Document) {
 	fmt.Println("Start Confluence Processing")
 	cdto := toConfluenceDto(b, documents)
@@ -69,7 +96,7 @@ func Execute(b model.Bitbucket, documents []model.Document) {
 	}
 
 	fmt.Println("Update Existing Page")
-	updatePage(cdto)
+	updatePage(cdto, documents)
 	fmt.Println("End Confluence Processing")
 }
 
@@ -80,15 +107,15 @@ func getRepositoryName(cdto *confluenceDto) {
 }
 
 func getEnvorinment(cdto *confluenceDto) {
-	if strings.Contains(cdto.bitbucket.Branch, "master") {
-		cdto.bitbucket.DeploymentEnvironment = "Release"
+	if strings.Contains(cdto.bitbucket.Branch, BRANCH) {
+		cdto.bitbucket.DeploymentEnvironment = DEPLOYMENT_RELEASE
 	} else {
-		cdto.bitbucket.DeploymentEnvironment = "Development - Snapshot"
+		cdto.bitbucket.DeploymentEnvironment = DEPLOYMENT_DEVELOPMENT
 	}
 }
 
-func updatePage(cdto confluenceDto) {
-	content := tmpl.BuildPage(cdto.bitbucket.RepoFullName, "", toTable(cdto))
+func updatePage(cdto confluenceDto, documents []model.Document) {
+	content := buildConfluencePage(cdto, documents)
 
 	request := UpdatePageRequest{
 		Id:       cdto.id,
