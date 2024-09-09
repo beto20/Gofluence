@@ -3,11 +3,14 @@ package command
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 
+	"github.com/beto20/gofluence/chart"
 	"github.com/beto20/gofluence/confluence"
 	"github.com/beto20/gofluence/java"
 	"github.com/beto20/gofluence/model"
+	"github.com/go-echarts/go-echarts/v2/components"
 )
 
 type Runner interface {
@@ -73,8 +76,26 @@ func (b *Command) Run(sc string) error {
 	}
 
 	data := java.ReadJavaProject(b.prefix)
+	print(data, bb.RepoFullName)
 	confluence.Execute(bb, data)
 	return nil
+}
+
+func print(documents []model.Document, projectName string) {
+	fmt.Println("PRINT INIT")
+	page := components.NewPage()
+	page.AddCharts(
+		chart.GenerateTreeChart(documents, projectName),
+	)
+
+	f, err := os.Create("tree.html")
+	if err != nil {
+		panic(err)
+
+	}
+	page.Render(io.MultiWriter(f))
+
+	fmt.Println("PRINT END")
 }
 
 func Root(args []string) error {
