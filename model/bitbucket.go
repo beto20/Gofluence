@@ -7,4 +7,5 @@ type Bitbucket struct {
 	RepoFullName          string
 	Token                 string
 	Url                   string
+	ImageRemoteUrl        string // TODO: refactor this code because it doesn't make sense be here
 }

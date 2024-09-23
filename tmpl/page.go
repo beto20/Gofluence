@@ -2,27 +2,6 @@ package tmpl
 
 import "fmt"
 
-const table = `
-	<table>
-		<tbody>
-			<tr>
-				<th>modulo</th>
-				<th>version</th>
-				<th>ambiente</th>
-				<th>rama</th>
-				<th>commit</th>
-			</tr>
-			<tr>
-				<td>assi-ifx-associated-services</td>
-				<td>0.0.1-6</td>
-				<td>SNAPSHOT - RELEASE</td>
-				<td>ESTABLE</td>
-				<td>develop - master</td>
-			</tr>
-		</tbody>
-	</table>
-`
-
 type Table struct {
 	Module      string
 	Version     string
@@ -104,6 +83,10 @@ func ComponentDiagram(title string, url string) string {
 	return ""
 }
 
-func BuildPage(title string, description string, values []Table, deps []TableDependency) string {
-	return BuildTitle(title) + BuildDescription(description) + BuildTable(values) + BuildTableDeps(deps)
+func BuildPage(title string, description string, values []Table, deps []TableDependency, imageRemoteUrl string) string {
+	return BuildTitle(title) + BuildDescription(description) + BuildTable(values) + BuildTableDeps(deps) + Image(imageRemoteUrl)
+}
+
+func Image(imageRemoteUrl string) string {
+	return fmt.Sprintf(`<h2>Arbol de proyecto</h2><img src="%s" />`, imageRemoteUrl)
 }

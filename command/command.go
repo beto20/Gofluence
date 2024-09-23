@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/beto20/gofluence/chart"
 	"github.com/beto20/gofluence/confluence"
 	"github.com/beto20/gofluence/java"
 	"github.com/beto20/gofluence/model"
+	"github.com/beto20/gofluence/storage"
+	"github.com/go-echarts/go-echarts/v2/components"
 )
 
 type Runner interface {
@@ -21,6 +24,7 @@ type Command struct {
 	branch           string
 	commit           string
 	connectionString string
+	container        string
 	repoFullName     string
 	prefix           string
 	token            string
@@ -39,6 +43,7 @@ func genericFlags(c *Command) *Command {
 	c.fs.StringVar(&c.branch, "b", "branch", "master")
 	c.fs.StringVar(&c.commit, "c", "commit", "bf372e2")
 	c.fs.StringVar(&c.connectionString, "cs", "connection string", "server:xxxxx")
+	c.fs.StringVar(&c.container, "ct", "container name", "container")
 	c.fs.StringVar(&c.repoFullName, "rn", "repository name", "example-confluence-repo")
 	c.fs.StringVar(&c.prefix, "p", "prefix", "exmp")
 	c.fs.StringVar(&c.token, "t", "token", "xxxxx")
@@ -59,6 +64,7 @@ func (b *Command) Run(sc string) error {
 	fmt.Printf("branch: %s\n", b.branch)
 	fmt.Printf("commit: %s\n", b.commit)
 	fmt.Printf("connectionString: %s\n", b.connectionString)
+	fmt.Printf("container: %s\n", b.container)
 	fmt.Printf("repoFullName: %s\n", b.repoFullName)
 	fmt.Printf("prefix: %s\n", b.prefix)
 	fmt.Printf("token: %s\n", b.token)
@@ -73,8 +79,37 @@ func (b *Command) Run(sc string) error {
 	}
 
 	data := java.ReadJavaProject(b.prefix)
+	imageRemotePath := print(data, bb.RepoFullName, b.connectionString, b.container)
+	bb.ImageRemoteUrl = imageRemotePath
 	confluence.Execute(bb, data)
 	return nil
+}
+
+func print(documents []model.Document, projectName string, connectionString string, container string) string {
+	fmt.Println("PRINT INIT")
+	page := components.NewPage()
+	page.AddCharts(
+		chart.GenerateTreeChart(documents, projectName),
+	)
+	fmt.Println("projectName ", projectName)
+	x := chart.NewSnapshotConfig(page.RenderContent(), "image_project.png", SetConfig("image_project"))
+	chart.MakeSnapshot(x)
+
+	fmt.Println("PRINT END")
+
+	return storage.UploadImage(container, connectionString, "image_project.png")
+}
+
+func SetConfig(projectName string) chart.SnapshotConfigOption {
+	return func(config *chart.SnapshotConfig) {
+		config.Renderer = "canvas"
+		config.Path = "."
+		config.FileName = projectName
+		config.Suffix = "png"
+		config.Quality = 2
+		config.HtmlPath = "."
+		config.KeepHtml = true
+	}
 }
 
 func Root(args []string) error {

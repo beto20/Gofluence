@@ -25,20 +25,23 @@ const (
 )
 
 type confluenceDto struct {
-	id          string
-	version     int64
-	spaceKey    string
-	bitbucket   model.Bitbucket
-	projectData []model.Document
+	id             string
+	version        int64
+	spaceKey       string
+	bitbucket      model.Bitbucket
+	projectData    []model.Document
+	imageRemoteUrl string
 }
 
 func toConfluenceDto(b model.Bitbucket, documents []model.Document) confluenceDto {
+	fmt.Println("b.ImageRemoteUrl", b.ImageRemoteUrl)
 	return confluenceDto{
-		id:          DEFAULT_EMPTY,
-		version:     DEFAULT_INT,
-		spaceKey:    DEFAULT_EMPTY,
-		bitbucket:   b,
-		projectData: documents,
+		id:             DEFAULT_EMPTY,
+		version:        DEFAULT_INT,
+		spaceKey:       DEFAULT_EMPTY,
+		bitbucket:      b,
+		projectData:    documents,
+		imageRemoteUrl: b.ImageRemoteUrl,
 	}
 }
 
@@ -80,7 +83,7 @@ func toTableDependency(documents []model.Document) []tmpl.TableDependency {
 func buildConfluencePage(cdto confluenceDto, documents []model.Document) string {
 	deps := toTableDependency(documents)
 	logs := toTableProject(cdto)
-	return tmpl.BuildPage(cdto.bitbucket.RepoFullName, "", logs, deps)
+	return tmpl.BuildPage(cdto.bitbucket.RepoFullName, "", logs, deps, cdto.imageRemoteUrl)
 }
 
 func Execute(b model.Bitbucket, documents []model.Document) {
