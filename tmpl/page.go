@@ -2,27 +2,6 @@ package tmpl
 
 import "fmt"
 
-const table = `
-	<table>
-		<tbody>
-			<tr>
-				<th>modulo</th>
-				<th>version</th>
-				<th>ambiente</th>
-				<th>rama</th>
-				<th>commit</th>
-			</tr>
-			<tr>
-				<td>assi-ifx-associated-services</td>
-				<td>0.0.1-6</td>
-				<td>SNAPSHOT - RELEASE</td>
-				<td>ESTABLE</td>
-				<td>develop - master</td>
-			</tr>
-		</tbody>
-	</table>
-`
-
 type Table struct {
 	Module      string
 	Version     string
@@ -105,5 +84,9 @@ func ComponentDiagram(title string, url string) string {
 }
 
 func BuildPage(title string, description string, values []Table, deps []TableDependency) string {
-	return BuildTitle(title) + BuildDescription(description) + BuildTable(values) + BuildTableDeps(deps)
+	return BuildTitle(title) + BuildDescription(description) + BuildTable(values) + BuildTableDeps(deps) + Image()
+}
+
+func Image() string {
+	return `<img src="https://streeu2c001assidev01.blob.core.windows.net/confluence/kingslanding-account-sales-front.png" />`
 }

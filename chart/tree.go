@@ -1,8 +1,6 @@
 package chart
 
 import (
-	"fmt"
-
 	"github.com/beto20/gofluence/model"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -22,14 +20,11 @@ const (
 func GenerateTreeChart(documents []model.Document, projectName string) *charts.Tree {
 	graph := charts.NewTree()
 	graph.SetGlobalOptions(
-		charts.WithInitializationOpts(opts.Initialization{Width: "100%", Height: "95vh"}),
+		charts.WithInitializationOpts(opts.Initialization{Width: "100%", Height: "80vh", BackgroundColor: "white"}),
 		charts.WithTitleOpts(opts.Title{Title: projectName}),
 	)
 
 	tree := buildTree(documents, projectName)
-	fmt.Println("projectName", projectName)
-	fmt.Println("tree", tree)
-
 	graph.AddSeries(projectName, tree).SetSeriesOptions(
 		charts.WithTreeOpts(
 			opts.TreeChart{
@@ -39,6 +34,10 @@ func GenerateTreeChart(documents []model.Document, projectName string) *charts.T
 				Leaves: &opts.TreeLeaves{
 					Label: &opts.Label{Show: opts.Bool(true), Position: POSITION_RIGHT, Color: COLOR_BLACK},
 				},
+				Right:  "18%",
+				Left:   "10%",
+				Bottom: "2%",
+				Top:    "8%",
 			},
 		),
 		charts.WithLabelOpts(opts.Label{Show: opts.Bool(true), Position: POSITION_TOP, Color: COLOR_BLACK}),

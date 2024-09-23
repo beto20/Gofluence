@@ -3,7 +3,6 @@ package command
 import (
 	"flag"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/beto20/gofluence/chart"
@@ -88,14 +87,22 @@ func print(documents []model.Document, projectName string) {
 		chart.GenerateTreeChart(documents, projectName),
 	)
 
-	f, err := os.Create("tree.html")
-	if err != nil {
-		panic(err)
-
-	}
-	page.Render(io.MultiWriter(f))
+	x := chart.NewSnapshotConfig(page.RenderContent(), projectName+".png", SetConfig(projectName))
+	chart.MakeSnapshot(x)
 
 	fmt.Println("PRINT END")
+}
+
+func SetConfig(projectName string) chart.SnapshotConfigOption {
+	return func(config *chart.SnapshotConfig) {
+		config.Renderer = "canvas"
+		config.Path = "."
+		config.FileName = projectName
+		config.Suffix = "png"
+		config.Quality = 2
+		config.HtmlPath = "."
+		config.KeepHtml = true
+	}
 }
 
 func Root(args []string) error {
