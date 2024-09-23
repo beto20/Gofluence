@@ -83,10 +83,10 @@ func ComponentDiagram(title string, url string) string {
 	return ""
 }
 
-func BuildPage(title string, description string, values []Table, deps []TableDependency) string {
-	return BuildTitle(title) + BuildDescription(description) + BuildTable(values) + BuildTableDeps(deps) + Image()
+func BuildPage(title string, description string, values []Table, deps []TableDependency, imageRemoteUrl string) string {
+	return BuildTitle(title) + BuildDescription(description) + BuildTable(values) + BuildTableDeps(deps) + Image(imageRemoteUrl)
 }
 
-func Image() string {
-	return `<img src="https://streeu2c001assidev01.blob.core.windows.net/confluence/kingslanding-account-sales-front.png" />`
+func Image(imageRemoteUrl string) string {
+	return fmt.Sprintf(`<h2>Arbol de proyecto</h2><img src="%s" />`, imageRemoteUrl)
 }
