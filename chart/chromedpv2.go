@@ -79,6 +79,13 @@ func MakeSnapshot(config *SnapshotConfig) error {
 	htmlPath := config.HtmlPath
 	timeout := config.Timeout
 
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Flag("headless", true),                    // Run Chrome in headless mode
+		chromedp.Flag("no-sandbox", true),                  // Disable sandbox mode (necessary in some environments)
+		chromedp.Flag("disable-gpu", true),                 // Disable GPU acceleration
+		chromedp.Flag("disable-software-rasterizer", true), // Disable software rasterizer
+	)
+
 	if htmlPath == "" {
 		htmlPath = path
 	}
@@ -90,8 +97,11 @@ func MakeSnapshot(config *SnapshotConfig) error {
 	if !filepath.IsAbs(htmlPath) {
 		htmlPath, _ = filepath.Abs(htmlPath)
 	}
+	// Create a new ExecAllocator context with the specified options
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
 
-	ctx, cancel := chromedp.NewContext(context.Background())
+	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	if timeout != 0 {
@@ -124,7 +134,7 @@ func MakeSnapshot(config *SnapshotConfig) error {
 	err = chromedp.Run(ctx,
 		chromedp.Navigate(fmt.Sprintf("%s%s", FileProtocol, htmlFullPath)),
 		chromedp.WaitVisible(EchartsInstanceDom, chromedp.ByQuery),
-		chromedp.Sleep(3*time.Second),
+		chromedp.Sleep(2*time.Second),
 		chromedp.Evaluate(executeJS, &base64Data),
 	)
 	if err != nil {
