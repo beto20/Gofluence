@@ -80,10 +80,10 @@ func MakeSnapshot(config *SnapshotConfig) error {
 	timeout := config.Timeout
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Flag("headless", true),                    // Run Chrome in headless mode
-		chromedp.Flag("no-sandbox", true),                  // Disable sandbox mode (necessary in some environments)
-		chromedp.Flag("disable-gpu", true),                 // Disable GPU acceleration
-		chromedp.Flag("disable-software-rasterizer", true), // Disable software rasterizer
+		chromedp.Flag("headless", true),
+		chromedp.Flag("no-sandbox", true),
+		chromedp.Flag("disable-gpu", true),
+		chromedp.Flag("disable-software-rasterizer", true),
 	)
 
 	if htmlPath == "" {
