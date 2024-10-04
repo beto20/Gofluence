@@ -85,6 +85,14 @@ func MakeSnapshot(config *SnapshotConfig) error {
 		chromedp.Flag("disable-gpu", true),
 		chromedp.Flag("window-size", "2048,1125"),
 		chromedp.Flag("disable-software-rasterizer", true),
+		chromedp.Flag("disable-dev-shm-usage", true),
+		chromedp.Flag("no-zygote", true),
+		chromedp.Flag("no-default-browser-check", true),
+		chromedp.Flag("disable-extensions", true),
+		chromedp.Flag("disable-translate", true),
+		chromedp.Flag("disable-background-timer-throttling", true),
+		chromedp.Flag("no-first-run", true),
+		chromedp.Flag("incognito", true),
 	)
 
 	if htmlPath == "" {
@@ -133,7 +141,6 @@ func MakeSnapshot(config *SnapshotConfig) error {
 	var base64Data string
 	executeJS := fmt.Sprintf(CanvasJs, suffix, quality)
 	err = chromedp.Run(ctx,
-		// emulation.SetDeviceMetricsOverride(2048, 1125, 1.0, false),
 		chromedp.Navigate(fmt.Sprintf("%s%s", FileProtocol, htmlFullPath)),
 		chromedp.WaitVisible(EchartsInstanceDom, chromedp.ByQuery),
 		chromedp.Sleep(2*time.Second),
