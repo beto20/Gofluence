@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/beto20/gofluence/chart"
 	"github.com/beto20/gofluence/confluence"
@@ -91,20 +92,39 @@ func print(documents []model.Document, projectName string, connectionString stri
 	page.AddCharts(
 		chart.GenerateTreeChart(documents, projectName),
 	)
-	fmt.Println("projectName ", projectName)
-	x := chart.NewSnapshotConfig(page.RenderContent(), "image_project.png", SetConfig("image_project"))
+
+	imageName := remove(projectName)
+	fmt.Println("project-Name ", imageName)
+	x := chart.NewSnapshotConfig(page.RenderContent(), imageName+".png", SetConfig(imageName))
 	chart.MakeSnapshot(x)
 
 	fmt.Println("PRINT END")
 
-	return storage.UploadImage(container, connectionString, "image_project.png")
+	return storage.UploadImage(container, connectionString, imageName+".png")
 }
 
-func SetConfig(projectName string) chart.SnapshotConfigOption {
+func remove(repoFullName string) string {
+	if contains(repoFullName, "/") {
+		repoName := strings.Split(repoFullName, "/")
+		return repoName[1]
+	}
+	return repoFullName
+}
+
+func contains(value string, key string) bool {
+	for _, v := range value {
+		if string(v) == key {
+			return true
+		}
+	}
+	return false
+}
+
+func SetConfig(imageName string) chart.SnapshotConfigOption {
 	return func(config *chart.SnapshotConfig) {
 		config.Renderer = "canvas"
 		config.Path = "."
-		config.FileName = projectName
+		config.FileName = imageName
 		config.Suffix = "png"
 		config.Quality = 2
 		config.HtmlPath = "."
