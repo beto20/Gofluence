@@ -32,12 +32,19 @@ func GenerateTreeChart(documents []model.Document, projectName string) *charts.T
 				Orient:           ORIENTATION,
 				InitialTreeDepth: TREE_DEPTH,
 				Leaves: &opts.TreeLeaves{
-					Label: &opts.Label{Show: opts.Bool(true), Position: POSITION_RIGHT, Color: COLOR_BLACK},
+					Label: &opts.Label{
+						Show:     opts.Bool(true),
+						Position: POSITION_RIGHT,
+						Color:    COLOR_BLACK,
+					},
+					LineStyle: &opts.LineStyle{
+						Type: "dashed",
+					},
 				},
 				Right:  "10%",
 				Left:   "6%",
 				Bottom: "2%",
-				Top:    "8%",
+				Top:    "5%",
 			},
 		),
 		charts.WithLabelOpts(opts.Label{Show: opts.Bool(true), Position: POSITION_TOP, Color: COLOR_BLACK}),
