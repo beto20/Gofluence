@@ -88,5 +88,5 @@ func BuildPage(title string, description string, values []Table, deps []TableDep
 }
 
 func Image(imageRemoteUrl string) string {
-	return fmt.Sprintf(`<h2>Arbol de proyecto</h2><img src="%s" />`, imageRemoteUrl)
+	return fmt.Sprintf(`<h2>Arbol de proyecto</h2><img src="%s" width="800" height="500"/>`, imageRemoteUrl)
 }
