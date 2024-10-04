@@ -34,8 +34,8 @@ func GenerateTreeChart(documents []model.Document, projectName string) *charts.T
 				Leaves: &opts.TreeLeaves{
 					Label: &opts.Label{Show: opts.Bool(true), Position: POSITION_RIGHT, Color: COLOR_BLACK},
 				},
-				Right:  "18%",
-				Left:   "10%",
+				Right:  "10%",
+				Left:   "6%",
 				Bottom: "2%",
 				Top:    "8%",
 			},
