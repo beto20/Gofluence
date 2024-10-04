@@ -83,6 +83,7 @@ func MakeSnapshot(config *SnapshotConfig) error {
 		chromedp.Flag("headless", true),
 		chromedp.Flag("no-sandbox", true),
 		chromedp.Flag("disable-gpu", true),
+		chromedp.Flag("window-size", "2048,1125"),
 		chromedp.Flag("disable-software-rasterizer", true),
 	)
 
@@ -132,6 +133,7 @@ func MakeSnapshot(config *SnapshotConfig) error {
 	var base64Data string
 	executeJS := fmt.Sprintf(CanvasJs, suffix, quality)
 	err = chromedp.Run(ctx,
+		// emulation.SetDeviceMetricsOverride(2048, 1125, 1.0, false),
 		chromedp.Navigate(fmt.Sprintf("%s%s", FileProtocol, htmlFullPath)),
 		chromedp.WaitVisible(EchartsInstanceDom, chromedp.ByQuery),
 		chromedp.Sleep(2*time.Second),
